@@ -1,0 +1,14 @@
+{
+    "name"         : "node-red-contrib-spool",
+    "version"      : "0.0.1",
+    "description"  : "Detects connection status changes of an upstream node and saves passed on messages when it changes to &amp;disconnected&amp;.",
+    "keywords": [ "node-red" ],
+    "node-red": {
+        "nodes": {
+            "spool": "spool.js"
+        }
+    },
+	"dependencies": {
+		"sqlite3": "3.1.*"
+	}
+}

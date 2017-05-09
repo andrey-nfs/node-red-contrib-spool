@@ -1,0 +1,57 @@
+<script type="text/x-red" data-template-name="spooldb">
+    <div class="form-row">
+        <label for="node-config-input-db"><i class="fa fa-database"></i> Database</label>
+		<input type="text" id="node-config-input-db" placeholder="/tmp/sqlite">
+		<br>Standard path examples with globally installed Node-Red<br>Windows: ../node-red-contrib-spool/sqlite<br>Linux: /tmp/sqlite
+    </div>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('spooldb',
+	{
+        category: 'config',
+        defaults: 
+		{
+            db: {value:"",required:true}
+        },
+        label: function() 
+		{
+            return this.db;
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="spool">
+    <div class="form-row">
+        <label for="node-input-mydb"><i class="fa fa-database"></i> Database</label>
+        <input type="text" id="node-input-mydb">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="spool">
+    <p>Detects the change in an upstream node&apos;s connection status. Saves all the passed data until it&apos;s restored. Passes the data on when it happens.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('spool',
+	{
+        category: 'function',
+        color: '#8B4513',
+        defaults: 
+		{
+			mydb: {type:"spooldb",required:true},
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:1,
+        icon: "db.png",
+        label: function() 
+		{
+            return this.name||"spool";
+        }
+    });
+</script>
