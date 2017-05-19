@@ -124,7 +124,7 @@ module.exports = function(RED)
 		}
 		else
 		{
-			this.error("An sqlite database's path is not configured correctly.");
+			node.error("An sqlite database's path is not configured correctly.");
 		}
 			
     }
