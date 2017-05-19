@@ -44,8 +44,6 @@ module.exports = function(RED)
 		{
             if (node.tick) { clearTimeout(node.tick); }
             if (node.db) { node.db.close(); }
-			
-			node.db.run("DROP TABLE  " + table);
         });
 		
 		if(node.dbname != "")
