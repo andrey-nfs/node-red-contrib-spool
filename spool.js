@@ -1,41 +1,35 @@
 module.exports = function(RED) 
 {
 	"use strict";
-	
     var reconnect = RED.settings.sqliteReconnectTime || 20000;
     var sqlite3 = require('sqlite3');
-	var util = require('util');
 	
-	var table = "spool4";
+	var table = "spool2";
 	
-	function SpoolNode(config)
+	//
+	// Opening, checking and closing the db connection, based on the existing SQLite node
+	//
+	function SpoolNodeDB(config) 
 	{
+		
         RED.nodes.createNode(this, config);
-		
-		this.dbname = config.dbname;
-		this.connStatusText = config.connStatusText;
-		this.disconnStatusText = config.disconnStatusText;
-		
+
+        this.dbname = config.db;
         var node = this;
 		
-		var connectionStatus = false;
-		var tableIsEmpty = true;
-		
-		node.doConnect = function() 
+        node.doConnect = function() 
 		{
             node.db = new sqlite3.Database(node.dbname);
-			
             node.db.on('open', function() 
 			{
                 if (node.tick) { clearTimeout(node.tick); }
-                node.log("Opened " + node.dbname + " successfully.");
+                node.log("opened "+node.dbname+" ok");
 				
-				node.db.run("CREATE TABLE IF NOT EXISTS " + table + " (id INTEGER PRIMARY KEY ASC, msg TEXT)");
+				node.db.run("CREATE TABLE IF NOT EXISTS " + table + " (id TEXT, payload TEXT)");
             });
-			
             node.db.on('error', function(err) 
 			{
-                node.error("Failed to open " + node.dbname, err + ".");
+                node.error("failed to open "+node.dbname, err);
                 node.tick = setTimeout(function() { node.doConnect(); }, reconnect);
             });
         }
@@ -44,87 +38,99 @@ module.exports = function(RED)
 		{
             if (node.tick) { clearTimeout(node.tick); }
             if (node.db) { node.db.close(); }
+			
+			node.db.run("DROP TABLE  " + table);
         });
 		
-		if(node.dbname != "")
-		{
+    }
+    RED.nodes.registerType('spooldb', SpoolNodeDB);
+
+	//
+	// actual operations with the db
+	// 
+	function SpoolNode(config)
+	{
+        RED.nodes.createNode(this, config);
 		
-			node.doConnect();
+		this.mydb = config.mydb;
+        this.mydbConfig = RED.nodes.getNode(this.mydb);
+		
+		var connectionStatus = false;
+		var tableIsEmpty = true;
+		
+		if(this.mydbConfig)
+		{
 			
-			console.log(config);
+			this.mydbConfig.doConnect();
+			var node = this;
 			
+			//
+			// TO-DO's
+			// 1) monitoring the connection status of a downstream node
+			// 2) getting actual data 
+			// 3) processing the data based on the connection status (create the structure of the db if there is data to be saved)
+			// 4) sending data further if the connection is restored
+			//
 			node.on('input', function(msg) 
-			{				
+			{
+						
 				if(msg.hasOwnProperty('status'))
-				{					
-					if(msg.status.text.includes(node.connStatusText)) 
+				{
+					//console.log(msg);
+					
+					if(msg.status.text.includes("status.connected")) 
 					{ 
 						connectionStatus = true;
 
-						node.db.serialize(function()
+						node.mydbConfig.db.serialize(function()
 						{
-							node.db.each("SELECT * FROM " + table + " ORDER BY id ASC", function(err, row)
+							node.mydbConfig.db.each("SELECT * FROM " + table, function(err, row)
 							{
 								if(err)
 								{
-									node.error(err, msg); 
+									node.error(err,msg); 
 								}
 								else
 								{
-									var parsedRow = JSON.parse(row.msg);
-									
-									node.send(parsedRow);
-									console.log(parsedRow._msgid + " was successfully passed on to the downstream node.");
-								
-									node.db.run("DELETE FROM " + table + " WHERE id = ?", row.id, function(err) 
+									node.mydbConfig.db.serialize(function()
 									{
-										if(err) throw err;
+										//console.log(row);
 										
-										console.log("Report: " + this.changes + " - " + util.inspect(this, { showHidden: false, depth: null }));
-
-										if(this.changes == 1) console.log(parsedRow._msgid + " was successfully removed from the database.");
-										else console.log("Could not remove " + parsedRow._msgid + " from the database.");
-
-									});
+										node.send(row.payload);
+										console.log(row.id + " was successfully passed on to the downstream node.");
+									
+										node.mydbConfig.db.run("DELETE FROM " + table + " WHERE id LIKE '%" + row.id + "%'");
+										console.log(row.id + " was successfully removed from the database.");
+									});									
 								}								
 							});							
 						});						
 					}
-					else if(msg.status.text.includes(node.disconnStatusText)) { connectionStatus = false; }
+					else if(msg.status.text.includes("status.disconnected")) { connectionStatus = false; }
 				}
 				
 				if(msg.hasOwnProperty('topic'))
-				{					
+				{
+					//console.log(msg);
+					
 					if(connectionStatus == false)
 					{						
-						node.db.serialize(function()
-						{
-							var stringifiedMsg = JSON.stringify(msg);
-						
-							node.db.run("INSERT INTO " + table + " VALUES (NULL, ?)", stringifiedMsg, function(err) 
-							{
-								if(err) throw err;
-								
-								console.log("Report: " + this.changes + " - " + util.inspect(this, { showHidden: false, depth: null }));
-
-								if(this.changes == 1) console.log("Message (" + stringifiedMsg + ") was successfully stored in the database.");
-								else console.log("Could not store " + msg._msgid + " in the database.");
-
-							});
+						node.mydbConfig.db.serialize(function()
+						{							
+							node.mydbConfig.db.run("INSERT INTO " + table + " VALUES (?, ?)", msg._msgid, msg.payload);
+							
+							console.log("A Message (ID: " + msg._msgid + ", Payload: " + msg.payload + ") was successfully stored in the database.");
 						});
 					}
-					else if(connectionStatus == true)
-					{
-						node.send(msg);
-						console.log(msg._msgid + " was successfully passed on to the downstream node.");
-					}					
-				}				
+					
+				}
+					
 			});
 			
 		}
 		else
 		{
-			node.error("An sqlite database's path is not configured correctly.");
+			this.error("Sqlite database not configured");
 		}
 			
     }
