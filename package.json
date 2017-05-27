@@ -1,7 +1,7 @@
 {
     "name"         : "node-red-contrib-spool",
-    "version"      : "0.0.1",
-    "description"  : "Detects connection status changes of an upstream node and saves passed on messages when it changes to &amp;disconnected&amp;.",
+    "version"      : "0.0.3",
+    "description"  : "Processes the connectivity status of a downsteam node, saves data when it's down, passes it on when it's up, retreives and removes saved data when connection is restored",
     "keywords": [ "node-red" ],
     "node-red": {
         "nodes": {
