@@ -51,4 +51,4 @@ The following in the general logic of how Spool processes the inputs:
 Authors
 -------
 * Andrey Ignatyev - [ignatyev@andrey.com.au](mailto:ignatyev@andrey.com.au)
-* Mandeep Kaur Sidhu - [m.sidhu@cqumail.com] (mailto:m.sidhu@cqumail.com)
+* Mandeep Kaur Sidhu - [m.sidhu@cqumail.com](mailto:m.sidhu@cqumail.com)
