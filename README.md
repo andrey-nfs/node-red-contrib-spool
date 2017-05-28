@@ -1,5 +1,54 @@
-# node-red-contrib-spool
+node-red-contrib-spool
+=========================
+[Node-RED](http://nodered.org) node that processes the connectivity status of a downsteam node, saves data when 
+it's down, passes it on when it's up, retreives and removes saved data when connection is restored.
 
-Current flow:
 
-[{"id":"23d3ef6d.aa3fa","type":"tab","label":"Spool"},{"id":"de352fbd.deb96","type":"status","z":"23d3ef6d.aa3fa","name":"status","scope":["d3a52ab2.4860d8"],"x":143,"y":151,"wires":[["fbc3583e.203b18"]]},{"id":"d8fecf6e.b41fe","type":"tcp in","z":"23d3ef6d.aa3fa","name":"","server":"server","host":"","port":"5000","datamode":"stream","datatype":"utf8","newline":"","topic":"tcp-topic","base64":false,"x":153,"y":434,"wires":[["fbc3583e.203b18"]]},{"id":"fbc3583e.203b18","type":"spool","z":"23d3ef6d.aa3fa","mydb":"f8d3bb5.254c548","name":"","x":429,"y":303,"wires":[["d3a52ab2.4860d8","1cbe48bc.83f5e7"]]},{"id":"d3a52ab2.4860d8","type":"tcp out","z":"23d3ef6d.aa3fa","host":"localhost","port":"1337","beserver":"client","base64":false,"end":false,"name":"","x":800,"y":363,"wires":[]},{"id":"1cbe48bc.83f5e7","type":"debug","z":"23d3ef6d.aa3fa","name":"","active":true,"console":"false","complete":"true","x":876,"y":224,"wires":[]},{"id":"70dead3c.0c52d4","type":"inject","z":"23d3ef6d.aa3fa","name":"","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"x":145,"y":289,"wires":[["fbc3583e.203b18"]]},{"id":"f8d3bb5.254c548","type":"spooldb","z":"","db":"../node-red-contrib-spool/spool.sqlite"}]
+Install
+-------
+Install from [npm](http://npmjs.org)
+```
+npm install node-red-contrib-spool
+```
+
+Usage
+-----
+This package contains one node tho pass input downstream or stores it depending on the downstream's node connectivity status. 
+It needs an existing SQLite database to work.
+
+
+Query node usage:
+-----------------
+
+You will need to fill in the following fields:
+
+1. Path to a database file.
+2. Connected message format.
+3. Disconnected message format.
+4. (Optional) Custom name for the node.
+
+
+Node usage:
+------------------
+
+1. Create a flow that has the following nodes: an input node, a status node, Spool and an output node.
+2. Connect the input node and the status node to Spool.
+3. Connect Spool to the output node.
+4. Configure the status node to only detect changes of the output node connectivity status.
+5. Configure Spool according to the connection messages that the output node generates (3 required parameters must be set explicitly).
+6. Start passing inputs through the flow.
+
+The following in the general logic of how Spool processes the inputs:
+
+1. If current connection status is "Connected":
+1.1 Pass the input message downstream 
+1.2 Retreive, pass downstream and remove any data that might be stored in the connected database previously
+
+2. If the status is "Disconnected":
+2.1 Don't pass the input data, store it in the connected database until the downstream node's connectivity restoration notice
+
+
+Authors
+-------
+* Andrey Ignatyev - [ignatyev@andrey.com.au](mailto:ignatyev@andrey.com.au)
+* Mandeep Kaur Sidhu - [m.sidhu@cqumail.com] (mailto:m.sidhu@cqumail.com)
