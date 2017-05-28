@@ -6,18 +6,20 @@ it's down, passes it on when it's up, retreives and removes saved data when conn
 
 Install
 -------
+
 Install from [npm](http://npmjs.org)
 ```
 npm install node-red-contrib-spool
 ```
 
-Usage
+Description
 -----
+
 This package contains one node tho pass input downstream or stores it depending on the downstream's node connectivity status. 
 It needs an existing SQLite database to work.
 
 
-Query node usage:
+Configuration:
 -----------------
 
 You will need to fill in the following fields:
@@ -38,7 +40,7 @@ Node usage:
 5. Configure Spool according to the connection messages that the output node generates (3 required parameters must be set explicitly).
 6. Start passing inputs through the flow.
 
-The following in the general logic of how Spool processes the inputs:
+The following is the general logic of how Spool processes the inputs:
 
 1. If current connection status is "Connected":
 1.1 Pass the input message downstream 
