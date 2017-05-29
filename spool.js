@@ -2,8 +2,8 @@ module.exports = function(RED)
 {
 	"use strict";
 	
-    var reconnect = RED.settings.sqliteReconnectTime || 20000;
-    var sqlite3 = require('sqlite3');
+	var reconnect = RED.settings.sqliteReconnectTime || 20000;
+	var sqlite3 = require('sqlite3');
 	var util = require('util');
 	
 	var table = "spool4";
@@ -14,12 +14,12 @@ module.exports = function(RED)
 	**/
 	function SpoolNode(config)
 	{
-        RED.nodes.createNode(this, config);
+        	RED.nodes.createNode(this, config);
 		
 		this.dbname = config.dbname;
 		this.connStatusText = config.connStatusText;
 		this.disconnStatusText = config.disconnStatusText;
-        var node = this;
+		var node = this;
 		
 		var connectionStatus = false;
 		var tableIsEmpty = true;
@@ -27,31 +27,31 @@ module.exports = function(RED)
 		/** Instantiates a database object, connects to database, checks for errors. */
 		node.doConnect = function() 
 		{
-            node.db = new sqlite3.Database(node.dbname);
+            		node.db = new sqlite3.Database(node.dbname);
 			
 			/** Opens a database connection upon the reception of a respective event, creates an output if successful, create a table structure if it doesn't exist in the database yet. */
-            node.db.on('open', function() 
+			node.db.on('open', function() 
 			{
-                if (node.tick) { clearTimeout(node.tick); }
-                node.log("Opened " + node.dbname + " successfully.");
+                		if (node.tick) { clearTimeout(node.tick); }
+                		node.log("Opened " + node.dbname + " successfully.");
 				
 				node.db.run("CREATE TABLE IF NOT EXISTS " + table + " (id INTEGER PRIMARY KEY ASC, msg TEXT)");
-            });
+            		});
 			
 			/** Detects an error while opening a database, outputs it after a set timeout. */
-            node.db.on('error', function(err) 
+            		node.db.on('error', function(err) 
 			{
-                node.error("Failed to open " + node.dbname, err + ".");
-                node.tick = setTimeout(function() { node.doConnect(); }, reconnect);
-            });
-        }
+		                node.error("Failed to open " + node.dbname, err + ".");
+                		node.tick = setTimeout(function() { node.doConnect(); }, reconnect);
+            		});
+        	}
 		
 		/** Closes a database connection upon the reception of a respective event. */
-        node.on('close', function () 
+        	node.on('close', function () 
 		{
-            if (node.tick) { clearTimeout(node.tick); }
-            if (node.db) { node.db.close(); }
-        });
+            		if (node.tick) { clearTimeout(node.tick); }
+            		if (node.db) { node.db.close(); }
+        	});
 		
 		if(node.dbname != "")
 		{
@@ -66,7 +66,6 @@ module.exports = function(RED)
 			**/			
 			node.on('input', function(msg) 
 			{
-				
 				if(msg.hasOwnProperty('status'))
 				{					
 					if(msg.status.text.includes(node.connStatusText)) 
@@ -75,8 +74,7 @@ module.exports = function(RED)
 						
 						/** Orders the underlying SQL queries. */
 						node.db.serialize(function()
-						{
-							
+						{							
 							/** 
 							 * Retreives all raws existing in the database in the order of their submission, processes them or catches errors.
 							 * @param {string} err - error text
